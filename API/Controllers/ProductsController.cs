@@ -1,4 +1,5 @@
 using System;
+using API.ResquestHelpers;
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
@@ -8,9 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProductsController : ControllerBase
+public class ProductsController : BaseAPIController
 {
     private readonly IGenericRepository<Product> repo;
     public ProductsController(IGenericRepository<Product> repo)
@@ -18,12 +17,11 @@ public class ProductsController : ControllerBase
         this.repo = repo;
     }
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand, string? type, string? sort)
+    public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecPrarams specPrarams)
     {
-        var spec = new ProductSpecification(brand, type, sort);
-
-        var products = await repo.ListAsync(spec);
-        return Ok(products);
+        var spec = new ProductSpecification(specPrarams);
+        
+        return await CreatePagedResult(repo, spec, specPrarams.PageIndex, specPrarams.PageSize);
     }
 
     [HttpGet("{id:int}")] //api/prodcuts/2
